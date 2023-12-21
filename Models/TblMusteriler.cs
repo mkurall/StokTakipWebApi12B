@@ -17,5 +17,5 @@ public partial class TblMusteriler
 
     public string? Adres { get; set; }
 
-    public virtual ICollection<TblStokCiki> TblStokCikis { get; set; } = new List<TblStokCiki>();
+    public virtual ICollection<TblStokCikis> TblStokCikis { get; set; } = new List<TblStokCikis>();
 }

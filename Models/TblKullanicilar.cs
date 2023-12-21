@@ -13,7 +13,7 @@ public partial class TblKullanicilar
 
     public int? Yetki { get; set; }
 
-    public virtual ICollection<TblStokCiki> TblStokCikis { get; set; } = new List<TblStokCiki>();
+    public virtual ICollection<TblStokCikis> TblStokCikis { get; set; } = new List<TblStokCikis>();
 
     public virtual ICollection<TblStokGiris> TblStokGirises { get; set; } = new List<TblStokGiris>();
 }

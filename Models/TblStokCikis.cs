@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace StokTakipWebApi12B.Models;
 
-public partial class TblStokCiki
+public partial class TblStokCikis
 {
     public int IslemId { get; set; }
 
