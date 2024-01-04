@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using StokTakipWebApi12B.Models;
 using StokTakipWebApi12B.Protokol;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 namespace StokTakipWebApi12B.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/v1/[action]")]
     public class StokTakipController : ControllerBase
     {
@@ -15,15 +20,66 @@ namespace StokTakipWebApi12B.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public string Test()
         {
             return "Api erişimi çalışıyor.";
         }
 
-        [HttpGet]
-        public IEnumerable<TblKullanicilar> KullanicilariGetir()
+        [HttpPost]
+        [AllowAnonymous]
+        public ApiCevap OturumAc(string kullaniciAdi, string parola)
         {
-            return ctx.TblKullanicilars.ToList();
+            var kullanici = ctx.TblKullanicilars.FirstOrDefault(x => x.KullaniciAd == kullaniciAdi && x.Parola == parola);
+            ApiCevap cevap = new ApiCevap();
+            if (kullanici == null)
+            {
+                cevap.BasariliMi = false;
+                cevap.HataMesaji = "Kullanıcı adı yada parola hatalı.";
+            }
+            else
+            {
+                //Burada kullanıcı için bilet düzenlenecek
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("Bu gizli bir kelime"));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                DateTime now = DateTime.Now;
+
+                System.Security.Claims.Claim[] claims =
+                {
+                    new System.Security.Claims.Claim("kullanici_id", kullanici.KullaniciId.ToString()),
+                    new System.Security.Claims.Claim("kullanici_ad", kullanici.KullaniciAd),
+                    new System.Security.Claims.Claim("kullanici_yetki", kullanici.Yetki.GetValueOrDefault().ToString()),
+
+                };
+
+                var token = new JwtSecurityToken("stoktakip.com", "stokstakip.com",
+              claims,
+              notBefore: now,//başlangıç tarihi
+              expires: now.AddDays(7),//bitiş tarihi
+              signingCredentials: creds);
+
+
+                //Bana bu access token gerekli
+                string access = new JwtSecurityTokenHandler().WriteToken(token);
+
+                cevap.BasariliMi = true;
+                cevap.Data = access;
+
+            }
+
+            return cevap;
+        }
+
+
+        [HttpGet]
+        
+        public ApiCevap KullanicilariGetir()
+        {
+            ApiCevap cevap = new ApiCevap();
+            cevap.Data = ctx.TblKullanicilars.ToList();
+            cevap.BasariliMi = true;
+            return cevap;
         }
 
         [HttpPost]
